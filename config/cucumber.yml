@@ -1,0 +1,2 @@
+default: --require features --tags ~@unimplemented --tags ~@failing --backtrace
+jenkins: --require features --tags ~@unimplemented --tags ~@failing --backtrace --format junit --out <%= ENV['CI_REPORTS'] %>

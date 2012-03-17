@@ -1,0 +1,15 @@
+development:
+  adapter: sqlite3
+  database: db/development.sqlite3
+  pool: 5
+  timeout: 5000
+
+# TEST_ENV_NUMBER is used in parallel_tests
+test: &test
+  adapter: sqlite3
+  database: db/test<%= ENV['TEST_ENV_NUMBER'] %>.sqlite3
+  pool: 5
+  timeout: 5000
+
+cucumber:
+  <<: *test
