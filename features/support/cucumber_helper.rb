@@ -1,23 +1,28 @@
 #
-# Global accessors for essential acceptance testing variables.
+# Global accessors for essential testing variables.
 #
 module Testing
   class << self
+
     attr_accessor :browser     , # WebDriver instance
                   :timestamp   , # random variable
                   :users       , # array of users
                   :base_url    , # base url of system under tests
                   :html_errors   # array of HTML validation errors
+
   end # << self
 end # AcceptanceTesting
 
 
 #
-# Different useful methods for Cucumber tests.
+# Different helper methods for Cucumber tests.
 #
 module CucumberHelper
+
   #
   # Initializes WebDriver instance.
+  #
+  # @return [Watir::Browser]
   #
   def self.initialize_webdriver
     # prepare Firefox profile
@@ -56,17 +61,16 @@ module CucumberHelper
   # Clears cookies, so we don't need to restart the browser
   # after each test scenario.
   #
+  # @return [Watir::Browser]
+  #
   def reset_browser
     # clear cookies
     Testing.browser.cookies.clear
 
     # open homepage
-    unless Testing.browser.url == "/#{Testing.base_url}"
+    unless Testing.browser.url == "#{Testing.base_url}/"
       Testing.browser.goto(Testing.base_url)
     end
-
-    # delete sessions from app
-    FileUtils.rm_rf('tmp/sessions')
 
     Testing.browser
   end
@@ -105,6 +109,8 @@ module CucumberHelper
 
   #
   # Saves screenshot of the page.
+  #
+  # @param scenario
   #
   def save_screenshot(scenario)
     path = SCREENSHOTS_DIR
@@ -146,6 +152,9 @@ module CucumberHelper
   #
   # Yields opened file and ensures downloads directory is removed after.
   #
+  # @param [String] name
+  # @yield [File]
+  #
   def downloaded_file(name)
     begin
       file = File.open(check_for_downloaded_file(name))
@@ -159,7 +168,8 @@ module CucumberHelper
   #
   # Returns user or creates new one by given role (non-default).
   #
-  # Optional arguments are passed to factory.
+  # @param [Symbol, String] role
+  # @param args Optional arguments which are passed to Factory
   #
   def get_user(role, *args)
     # prepare role name
@@ -178,6 +188,7 @@ module CucumberHelper
 
   #
   # Returns full name of user by his role.
+  # @return [String]
   #
   def get_user_name(role)
     get_user(role).full_name
@@ -185,6 +196,7 @@ module CucumberHelper
 
   #
   # Returns email of user by his role.
+  # @return [String]
   #
   def get_user_email(role)
     get_user(role).email
@@ -192,6 +204,7 @@ module CucumberHelper
 
   #
   # Returns user ID.
+  # @return [Fixnum]
   #
   def get_user_id(role)
     get_user(role).user.id
@@ -199,6 +212,9 @@ module CucumberHelper
 
   #
   # Saves user with role and email into Testing#users hash.
+  #
+  # @param [String, Symbol] role
+  # @param [String] email
   #
   def save_user(role, email)
     # prepare role name
@@ -212,7 +228,7 @@ module CucumberHelper
 
   #
   # Returns an array of emails.
-  # Each email is an instance of Mail.
+  # @return [Array<Mail>]
   #
   def emails
     ActionMailer::Base.cached_deliveries
@@ -223,6 +239,10 @@ module CucumberHelper
   #
   # If no options were passed, uses last email.
   #
+  # @param [Hash] options
+  # @option opts [String] :to
+  # @option opts [String] :subject
+  #
   def open_email(opts = {}, &blk)
     opts.empty? ? blk.call(emails.last) : blk.call(find_email(opts))
   end
@@ -230,24 +250,32 @@ module CucumberHelper
   #
   # Calls block for an array of email.
   #
+  # @param [Hash] options
+  # @option opts [String] :to
+  # @option opts [String] :subject
+  #
   def open_emails(opts, &blk)
     blk.call(find_emails(opts))
   end
 
   #
-  # Extracts link from email body.
+  # Returns email which matches options.
   #
-  # If no links were found in email body, raises exception.
+  # @param [Hash] options
+  # @option opts [String] :to
+  # @option opts [String] :subject
+  # @return [Mail]
   #
-  def extract_link(mail)
-    mail.decode_body =~ /<a href="(.+)">/
-    $1 or raise "No links in the email."
+  def find_email(opts)
+    find_emails(opts).first
   end
 
   #
   # Returns parsed version of human-readable date.
   #
-  # Generally, we use "%b, %d %Y" format for date, so it' default.
+  # @param [Date, Time, DateTime] date
+  # @param [String] format
+  # @return [String]
   #
   def parse_date(date, format = '%b, %d %Y')
     date.to_time.strftime(format)
@@ -260,6 +288,11 @@ module CucumberHelper
   #
   # Note, that as long as filename may contain unpredictable set of characters,
   # method requires passing filename argument to be a regular expression.
+  #
+  # @param [Regexp] name
+  # @return [String]
+  # @raise [RuntimeError] If name is not regexp
+  # @raise [Errno::ENOENT] If file was not found
   #
   def check_for_downloaded_file(name)
     unless name.is_a?(Regexp)
@@ -279,22 +312,30 @@ module CucumberHelper
   end
 
   #
-  # Returns email which matches options.
-  #
-  def find_email(opts)
-    find_emails(opts).first
-  end
-
-  #
   # Returns an array of emails which match options.
   #
-  # Possible options are :to and :subject.
-  #
   # Please note that it searches from the most recent to oldest emails.
+  #
+  # @param [Hash] options
+  # @option opts [String] :to
+  # @option opts [String] :subject
+  # @return [Array<Mail>]
   #
   def find_emails(opts)
     emails.reverse.select do |email|
       email.to.include?(opts[:to]) || email.subject == opts[:subject]
     end
   end
+
+  #
+  # Extracts link from email body.
+  #
+  # @param [Mail] mail
+  # @retunr [String]
+  # @raise [RuntimeError] If no links were found in email body
+  #
+  def extract_link(mail)
+    mail.decode_body.gsub(/<a href="(.+)">/, '\1') or raise "No links in the email."
+  end
+
 end # CucumberHelper

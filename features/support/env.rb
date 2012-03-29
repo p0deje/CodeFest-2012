@@ -1,17 +1,12 @@
 ENV['RAILS_ENV'] = 'cucumber'
 
-require "#{File.dirname(__FILE__)}/../../config/environment"
-
-DOWNLOADS_DIR   = "#{Rails.root}/tmp/tests_downloads"
-SAVED_PAGES_DIR = "#{Rails.root}/tmp/pages"
-SCREENSHOTS_DIR = "#{Rails.root}/tmp/screenshots"
-
 require 'watir-webdriver'
 require 'page-object'
-require 'be_valid_asset'
 require 'factory_girl_rails'
+require 'be_valid_asset' if ENV['w3c_validate']
 
-require 'capybara/rails'
+# Configure Capybara server startup
+require 'capybara'
 Capybara.configure do |capybara|
   capybara.server_boot_timeout = 30
   capybara.server_port = 9887
@@ -20,6 +15,16 @@ Capybara.configure do |capybara|
   capybara.server_port += ENV['TEST_ENV_NUMBER'].to_i
 end
 
+# Initialize Testing structure and prepare it
+require_relative 'cucumber_helper'
+include CucumberHelper
+Testing.base_url = "http://localhost:#{Capybara.server_port}"
+
+# Initialize application
+require_relative '../../config/environment'
+
+# Force Capybara to use Rails app and unicorn
+require 'capybara/rails'
 require 'unicorn'
 Capybara.server do |app, port|
   Unicorn::Configurator::RACKUP[:port] = port
@@ -27,10 +32,12 @@ Capybara.server do |app, port|
   Unicorn::HttpServer.new(app).start
 end
 
-require "#{Rails.root}/features/support/cucumber_helper"
-include CucumberHelper
-Testing.base_url = "http://localhost:#{Capybara.server_port}"
+# Initialize directories in use
+DOWNLOADS_DIR   = "#{Rails.root}/tmp/downloads"
+SAVED_PAGES_DIR = "#{Rails.root}/tmp/pages"
+SCREENSHOTS_DIR = "#{Rails.root}/tmp/screenshots"
 
+# Configure database cleaning strategy
 require 'database_cleaner'
 TABLES_TO_TRUNCATE = %w(users)
 DatabaseCleaner.strategy = :truncation, { only: TABLES_TO_TRUNCATE }

@@ -14,7 +14,6 @@ TopTal::Application.configure do
   # We also need to separate cache files for parallel_tests
   location = "#{Rails.root}/tmp/cache/action_mailer_cache_deliveries#{ENV['TEST_ENV_NUMBER']}.cache"
   config.action_mailer.cache_settings = { location: location }
-  # We also need to set corresponding server instance's hostname (only for Cucumber)
-  host = defined?(Testing) ? Testing.base_url.gsub(%r(^https?://), '') : 'localhost:3000'
-  config.action_mailer.default_url_options = { host: host }
+  # We also need to set corresponding server instance's hostname
+  config.action_mailer.default_url_options = { host: Testing.base_url.gsub(%r(^https?://), '') }
 end

@@ -11,5 +11,6 @@ test: &test
   pool: 5
   timeout: 5000
 
+# Separate environment for Cucumber
 cucumber:
   <<: *test

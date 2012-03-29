@@ -55,7 +55,7 @@ end
 # HTML validations.
 #
 if ENV['w3c_validate']
-  include BeValidAsset
+  World(BeValidAsset)
 
   AfterStep { validate_html }
 end
