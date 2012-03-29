@@ -1,6 +1,6 @@
 # Description
 
-This repository contains Cucumber + Watir-WebDriver helpers and additions that were talked about at (CodeFest 2012)[http://codefest.ru/program/2012-03/testing-ruby/]
+This repository contains Cucumber + Watir-WebDriver helpers and additions that were talked about at [CodeFest 2012](http://codefest.ru/program/2012-03/testing-ruby/)
 
 # What's that?
 
